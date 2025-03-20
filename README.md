@@ -38,7 +38,8 @@ pip install notebook
    Then open the relevant notebook file and execute the cells sequentially.
 4. **If running Python scripts directly**, use:
    ```bash
-   python filename.py
+   python uci_har_svm.py
+   python filemname.py
    ```
 5. **For the UCI HAR Dataset**, ensure that the dataset ZIP file is extracted into the correct directory before running the classification task.
 
