@@ -133,7 +133,7 @@ This section classifies human activities as **Active (1) or Inactive (0)** using
 
 ---
 
-### Author: [Your Name]
+### Author: Farra Qistina Binti Mohmmad Nasir
 ### Course: AI Coursework
 ### Institution: City, University of London
 
