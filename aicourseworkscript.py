@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[2]:
-
-
-get_ipython().system('pip install numpy pandas matplotlib scikit-learn')
-
 # Import libraries
 import numpy as np
 import pandas as pd
@@ -122,7 +114,7 @@ plt.show()
 
 # In[9]:
 
-
+# Import Libraries
 import os
 import zipfile
 import pandas as pd
@@ -131,28 +123,30 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-# Path to ZIP file
+# Define paths to the dataset ZIP file and extraction directory
 zip_file_path = r"C:\Users\User\OneDrive - City, University of London\AI Coursework\UCI_HAR_Dataset\UCI HAR Dataset.zip"
-
-# Define extraction directory
 extract_dir = r"C:\Users\User\OneDrive - City, University of London\AI Coursework\UCI_HAR_Dataset\Extracted"
 
-# Extracting only if not already extracted
+# Extract the dataset if it hasn't been extracted already
 if not os.path.exists(extract_dir):
+    print("Extracting dataset...")
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
         zip_ref.extractall(extract_dir)
+    print("Extraction complete!")
+else:
+    print("Dataset already extracted.")
 
-# Define dataset path inside the extracted directory
+# Define the base path to the extracted dataset
 base_path = os.path.join(extract_dir, "UCI HAR Dataset")
 
-# Feature names
+# Load feature names (561 features)
 features_path = os.path.join(base_path, "features.txt")
 feature_names = pd.read_csv(features_path, sep="\s+", header=None, names=["idx", "feature"])
 
-# Load activity labels
+# Load activity labels (e.g., WALKING, SITTING)
 activity_labels_path = os.path.join(base_path, "activity_labels.txt")
 activity_labels = pd.read_csv(activity_labels_path, sep="\s+", header=None, names=["id", "activity"])
 
@@ -172,13 +166,15 @@ y_test = pd.read_csv(y_test_path, sep="\s+", header=None, names=["activity_id"])
 X_train.columns = feature_names["feature"]
 X_test.columns = feature_names["feature"]
 
-# Map activity IDs to their corresponding labels
+# Map activity IDs to their corresponding labels (e.g., 1 -> WALKING)
 y_train["activity"] = y_train["activity_id"].map(activity_labels.set_index("id")["activity"])
 y_test["activity"] = y_test["activity_id"].map(activity_labels.set_index("id")["activity"])
 
 # Convert multi-class labels to binary labels (Active = 1, Inactive = 0)
 def to_binary_label(activity):
-    return 1 if activity in ["WALKING", "WALKING_UPSTAIRS", "WALKING_DOWNSTAIRS"] else 0
+    """Convert activity labels to binary: Active (1) or Inactive (0)."""
+    active_activities = ["WALKING", "WALKING_UPSTAIRS", "WALKING_DOWNSTAIRS"]
+    return 1 if activity in active_activities else 0
 
 y_train["binary_label"] = y_train["activity"].apply(to_binary_label)
 y_test["binary_label"] = y_test["activity"].apply(to_binary_label)
@@ -187,13 +183,19 @@ y_test["binary_label"] = y_test["activity"].apply(to_binary_label)
 y_train_binary = y_train["binary_label"]
 y_test_binary = y_test["binary_label"]
 
-# Standardize features
+# Check class distribution
+print("\nTraining Class Distribution:")
+print(y_train_binary.value_counts())
+print("\nTest Class Distribution:")
+print(y_test_binary.value_counts())
+
+# Standardize features (fit only on training data)
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-# Reduce dimensionality using PCA (to 50 components)
-pca = PCA(n_components=50)
+# Reduce dimensionality using PCA (fit only on training data)
+pca = PCA(n_components=50)  # Reduce from 561 features to 50
 X_train_pca = pca.fit_transform(X_train_scaled)
 X_test_pca = pca.transform(X_test_scaled)
 
@@ -202,16 +204,21 @@ kernels = ["linear", "poly", "rbf"]
 svm_results = {}
 
 for kernel in kernels:
-    print(f"Training SVM with {kernel} kernel...")
+    print(f"\nTraining SVM with {kernel} kernel...")
 
-    # Train SVM
-    svm_model = SVC(kernel=kernel, C=1, gamma='scale')
+    # Use LinearSVC for the linear kernel (faster and more efficient)
+    if kernel == "linear":
+        svm_model = LinearSVC(C=1, max_iter=10000)  # Increase max_iter for convergence
+    else:
+        svm_model = SVC(kernel=kernel, C=1, gamma='scale')
+
+    # Fit the model on the full training data
     svm_model.fit(X_train_pca, y_train_binary)
 
-    # Predictions
+    # Predictions on the test set
     y_pred_svm = svm_model.predict(X_test_pca)
 
-    # Evaluate model
+    # Evaluate model performance
     acc = accuracy_score(y_test_binary, y_pred_svm)
     conf_matrix = confusion_matrix(y_test_binary, y_pred_svm)
     class_report = classification_report(y_test_binary, y_pred_svm)
@@ -248,10 +255,8 @@ for kernel in kernels:
 
 # Print the best-performing kernel
 best_kernel = max(svm_results, key=lambda k: svm_results[k]["Accuracy"])
-print(f"Best-performing kernel: {best_kernel} with Accuracy: {svm_results[best_kernel]['Accuracy']:.4f}")
+print(f"\nBest-performing kernel: {best_kernel} with Accuracy: {svm_results[best_kernel]['Accuracy']:.4f}")
 
-
-# In[ ]:
 
 
 
