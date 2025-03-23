@@ -13,7 +13,7 @@ Each section covers data preparation, model training, evaluation, and visualizat
 
 ## Running Instructions on a Local Machine
 ### Prerequisites
-Before running the project, ensure you have **Python 3.x** installed. You can download it from [python.org](https://www.python.org/downloads/).
+Before running the project, ensure you have **Python 3.x** installed.
 
 ### Installing Required Libraries
 To install the necessary dependencies, run the following command:
